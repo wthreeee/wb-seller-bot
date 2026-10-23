@@ -2,7 +2,6 @@ import {
   changePercent,
   forecastStocks,
   ordersByDay,
-  sparkline,
   summarizeDay,
   topArticles,
   type StockForecast
@@ -54,7 +53,8 @@ export function createReports(source: WbSource, options: ReportOptions, now: () 
       `🛒 Заказы: <b>${current.ordersCount} шт · ${money(current.ordersSum)}</b>${trend(change)}${change ? ' к предыдущему дню' : ''}`,
       `💰 Выкупы: ${current.salesCount} шт · к перечислению ${money(current.forPay)}`,
       `↩️ Возвраты: ${current.returnsCount} · отмены: ${current.cancels}`,
-      `📈 Заказы за 7 дней: ${sparkline(ordersByDay(orders, week))}`
+      // Числа, а не символы-столбики: блочные символы ▁▃▅ в Telegram Web и на части устройств отображаются криво
+      `📈 Заказы за 7 дней, шт: ${ordersByDay(orders, week).join(' → ')}`
     ];
 
     if (top.length > 0) {
