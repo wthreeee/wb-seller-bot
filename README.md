@@ -1,71 +1,61 @@
-# 📦 Бот-аналитик для селлера Wildberries
+# 📦 Sales Analytics Bot for Wildberries Sellers
 
-Telegram-бот, который каждое утро присылает владельцу магазина сводку за вчера: заказы, выкупы, возвраты, лидеров продаж и товары, которые скоро закончатся. По кнопке — остатки с прогнозом и топ товаров за неделю.
+**English** · [Русский](README.ru.md)
 
-Работает через официальный API продавца Wildberries. Без токена WB запускается на демо-данных.
+A Telegram bot that sends a marketplace seller a morning summary of yesterday: orders, purchases, returns, best sellers and products that are about to run out. Buttons show stock levels with a forecast and the top products of the week.
 
-<img src="docs/report.png" width="380" alt="Ежедневный отчёт в Telegram: заказы, выкупы, лидеры дня, товары на исходе"> <img src="docs/stocks.png" width="380" alt="Остатки со светофором и прогнозом">
+Built on the official [Wildberries](https://www.wildberries.ru) seller API (the largest marketplace in Russia and CIS). Without an API token it runs on demo data.
 
-## Что умеет
+> The same approach works for any marketplace with a seller API — Amazon SP-API, Etsy, Shopify, Ozon.
 
-- **Ежедневный отчёт** в заданное время (по умолчанию 09:00 МСК): заказы и сумма, сравнение с предыдущим днём, выкупы и сумма к перечислению, возвраты и отмены, заказы по дням за неделю
-- **Лидеры дня** — три товара с наибольшей выручкой
-- **Прогноз остатков**: на сколько дней хватит товара при текущем темпе заказов; предупреждение, если меньше 7 дней (порог настраивается)
-- **Команды и кнопки**: `/report` — за вчера, `/today` — сегодня на текущий момент, `/stocks` — все остатки со светофором 🔴🟡🟢, `/top` — топ-10 за 7 дней
-- **Закрытый доступ**: бот отвечает только владельцу и тем, чьи ID указаны в настройках
+<img src="docs/report.png" width="380" alt="Daily report in Telegram: orders, purchases, best sellers, low stock"> <img src="docs/stocks.png" width="380" alt="Stock levels with traffic-light forecast">
 
-## Как устроено
+## Features
 
-- Заказы и продажи — `statistics-api.wildberries.ru` (`/api/v1/supplier/orders`, `/api/v1/supplier/sales`), с догрузкой, если строк больше 80 000
-- Остатки — отчёт `warehouse_remains` из `seller-analytics-api.wildberries.ru` в три шага: создать задание → дождаться готовности → скачать
-- У WB лимит 1 запрос в минуту на метод, а данные обновляются раз в 30 минут, поэтому ответы кэшируются на 30 минут
-- Понятные сообщения об ошибках WB: неверный токен, нет доступа к категории, превышен лимит
-- Все даты — по Москве, как в API WB
-- 9 автотестов: расчёты, прогноз, работа с API на подменённом `fetch`, расписание
+- **Daily report** at a set time (09:00 Moscow time by default): orders and revenue, change vs. the previous day, purchases and payout amount, returns and cancellations, orders per day for the last week
+- **Best sellers of the day** — top 3 products by revenue
+- **Stock forecast**: how many days each product will last at the current order rate, with a warning below 7 days (configurable)
+- **Commands and buttons**: `/report` — yesterday, `/today` — today so far, `/stocks` — all stock with 🔴🟡🟢 status, `/top` — top 10 for 7 days
+- **Private access**: the bot only answers the owner and the users listed in the settings
 
-## Стек
+## How it works
 
-Node.js 24 · TypeScript · grammY · `fetch` · `node:test`. Без базы данных и лишних зависимостей.
+- Orders and sales — `statistics-api.wildberries.ru` (`/api/v1/supplier/orders`, `/api/v1/supplier/sales`) with pagination beyond 80,000 rows
+- Stock — the `warehouse_remains` report from `seller-analytics-api.wildberries.ru` in three steps: create a task → wait until ready → download
+- The API allows 1 request per minute per method and data updates every 30 minutes, so responses are cached for 30 minutes
+- Clear error messages for invalid tokens, missing permissions and rate limits
+- 9 automated tests: calculations, forecast, API client with a mocked `fetch`, scheduling
 
-## Структура
+## Tech stack
+
+Node.js 24 · TypeScript · grammY · `fetch` · `node:test`. No database, minimal dependencies.
+
+## Structure
 
 ```
 src/
-├── index.ts          # запуск бота и ежедневной рассылки
-├── bot.ts            # команды, кнопки, доступ
-├── report.ts         # тексты отчётов
-├── analytics.ts      # расчёты: сводка за день, топ, прогноз остатков
-├── scheduler.ts      # запуск каждый день в заданное время
-├── print-report.ts   # отчёт в консоль, без Telegram
+├── index.ts          # starts the bot and the daily schedule
+├── bot.ts            # commands, buttons, access control
+├── report.ts         # report texts
+├── analytics.ts      # daily summary, top products, stock forecast
+├── scheduler.ts      # runs a task every day at a set time
+├── print-report.ts   # prints a report to the console, no Telegram needed
 └── wb/
-    ├── client.ts     # клиент API Wildberries
-    ├── demo.ts       # демо-магазин для показа без токена
-    └── types.ts      # поля ответов API
+    ├── client.ts     # Wildberries API client
+    ├── demo.ts       # demo store for running without a token
+    └── types.ts      # API response fields
 ```
 
-## Запуск
+## Running
 
-Нужен **Node.js 24+**.
+Requires **Node.js 24+**.
 
 ```bash
 npm install
-npm run report           # отчёт за вчера в консоль (демо-данные)
-npm run report stocks    # остатки
+npm run report           # yesterday's report in the console (demo data)
+npm run report stocks    # stock levels
 ```
 
-С Telegram:
+With Telegram: create a bot with [@BotFather](https://t.me/BotFather), copy `.env.example` to `.env`, set `BOT_TOKEN`, run `npm start`, send `/myid` to the bot and put the ID into `ADMIN_IDS`. For a real store, add a seller API token with "Statistics" and "Analytics" access to `WB_TOKEN`.
 
-1. Создайте бота у [@BotFather](https://t.me/BotFather), скопируйте `.env.example` в `.env`, вставьте `BOT_TOKEN`.
-2. `npm start`, напишите боту `/myid`, впишите ID в `ADMIN_IDS`, перезапустите.
-3. Для своего магазина создайте токен в личном кабинете WB (Настройки → Доступ к API) с категориями **«Статистика»** и **«Аналитика»** и вставьте в `WB_TOKEN`.
-
-| Переменная | Зачем |
-|---|---|
-| `BOT_TOKEN` | токен Telegram-бота |
-| `WB_TOKEN` | токен API продавца WB; без него — демо-данные |
-| `ADMIN_IDS` | кто пользуется ботом и получает отчёт |
-| `REPORT_TIME` | время утреннего отчёта, МСК (по умолчанию `09:00`) |
-| `LOW_STOCK_DAYS` | порог «скоро закончится», дней (по умолчанию `7`) |
-| `TELEGRAM_PROXY` | HTTP-прокси, если `api.telegram.org` недоступен с сервера |
-
-**Что можно добавить за доплату:** Ozon, несколько магазинов в одном боте, выгрузку в Google Таблицы, графики картинкой, отчёт по рекламе, уведомления о новых отзывах.
+**Possible extensions:** other marketplaces, several stores in one bot, Google Sheets export, chart images, advertising reports, new review alerts.
