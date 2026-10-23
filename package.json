@@ -1,0 +1,24 @@
+{
+  "name": "wb-seller-bot",
+  "private": true,
+  "description": "Telegram-бот для селлера Wildberries: ежедневный отчёт о заказах и продажах, остатки и прогноз, топ товаров",
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env src/index.ts",
+    "dev": "node --env-file-if-exists=.env --watch src/index.ts",
+    "report": "node --env-file-if-exists=.env src/print-report.ts",
+    "typecheck": "tsc",
+    "test": "node --test \"src/**/*.test.ts\""
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "grammy": "^1.46.0",
+    "https-proxy-agent": "^9.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "typescript": "^5.9.3"
+  }
+}
